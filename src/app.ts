@@ -16,11 +16,22 @@ const app = express()
 // 1. helmet: agrega headers HTTP de seguridad (CSP, HSTS, X-Frame-Options, etc.)
 app.use(helmet())
 
-// 2. cors: permite peticiones solo desde el frontend configurado en FRONTEND_URL
+// 2. cors: permite peticiones desde los orígenes configurados
+//    FRONTEND_URL puede ser una lista separada por comas para múltiples orígenes
 //    credentials: true es necesario para enviar cookies/headers de autorización
+const allowedOrigins = (process.env.FRONTEND_URL ?? '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean)
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      // Permitir requests sin origin (Postman, curl, server-to-server)
+      if (!origin) return callback(null, true)
+      if (allowedOrigins.includes(origin)) return callback(null, true)
+      callback(new Error(`CORS bloqueado para origen: ${origin}`))
+    },
     credentials: true,
   })
 )
