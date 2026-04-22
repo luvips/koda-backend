@@ -8,6 +8,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
+  // En producción (Render) ambas URLs deben apuntar al pooler de Supabase (puerto 6543)
+  // La URL directa (puerto 5432) no es accesible desde Render en plan gratuito
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
