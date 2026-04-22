@@ -43,6 +43,9 @@ export function calculateDifficulty(code: string): Difficulty {
 }
 
 export function extractDifficultKeys(keyErrors: string[]): string[] {
+  // Protección contra undefined/null
+  if (!keyErrors || keyErrors.length === 0) return []
+
   const frequency: Record<string, number> = {}
   for (const key of keyErrors) {
     frequency[key] = (frequency[key] ?? 0) + 1

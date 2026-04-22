@@ -11,6 +11,17 @@ export async function createSessionController(
   try {
     const userId = (req as AuthenticatedRequest).user.userId
     const { snippetId, correctChars, totalErrors, durationMs, keyErrors } = req.body as CreateSessionInput
+
+    // Log para debug en producción
+    console.log('[createSessionController] payload:', {
+      userId,
+      snippetId,
+      correctChars,
+      totalErrors,
+      durationMs,
+      keyErrors,
+    })
+
     const snippet = await prisma.snippet.findUnique({
       where: { id: snippetId },
     })
@@ -18,16 +29,22 @@ export async function createSessionController(
     if (!snippet) {
       return res.status(404).json({ error: 'Snippet not found' })
     }
+
     const evaluation = evaluateSession({
       correctChars,
       totalErrors,
       durationMs,
-      keyErrors,
+      // keyErrors puede llegar undefined si el frontend no lo envía — usar [] como fallback
+      keyErrors: keyErrors ?? [],
       snippetLength: snippet.code.length,
     })
+
+    console.log('[createSessionController] evaluation:', evaluation)
+
     if (!evaluation.antiCheat.valid) {
       return res.status(400).json({ error: evaluation.antiCheat.reason })
     }
+
     const session = await prisma.typingSession.create({
       data: {
         userId,
@@ -40,6 +57,7 @@ export async function createSessionController(
         status: evaluation.status,
       },
     })
+
     return res.status(201).json({
       message: 'Session saved',
       data: {
