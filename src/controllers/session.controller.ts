@@ -46,9 +46,17 @@ export async function createSessionController(
       return res.status(400).json({ error: evaluation.antiCheat.reason })
     }
 
-    // Usamos $queryRaw para evitar el error 22P03 del pooler de Supabase
+    // Usamos $executeRaw para evitar el error 22P03 del pooler de Supabase
     // con tipos Float — Prisma ORM tiene un bug conocido con PgBouncer Transaction mode
     const sessionId = randomUUID()
+
+    // Convertir el array de teclas difíciles al formato literal de PostgreSQL
+    // Ejemplo: ['a', 's'] → '{a,s}'
+    // Necesario porque $executeRaw no puede pasar arrays JS directamente con ::text[]
+    const difficultKeysLiteral = '{' + evaluation.difficultKeys
+      .map(k => k.replace(/\\/g, '\\\\').replace(/"/g, '\\"'))
+      .join(',') + '}'
+
     await prisma.$executeRaw`
       INSERT INTO "public"."TypingSession"
         ("id", "userId", "snippetId", "wpm", "cpm", "precision", "totalErrors", "difficultKeys", "status", "archived", "date")
@@ -60,7 +68,7 @@ export async function createSessionController(
         ${evaluation.cpm}::float8,
         ${evaluation.precision}::float8,
         ${totalErrors}::int4,
-        ${evaluation.difficultKeys}::text[],
+        ${difficultKeysLiteral}::text[],
         ${evaluation.status}::"public"."SessionStatus",
         false,
         NOW()
