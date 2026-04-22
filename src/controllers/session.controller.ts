@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { randomUUID } from 'crypto'
 import prisma from '../lib/prisma'
 import { AuthenticatedRequest } from '../types'
 import { CreateSessionInput } from '../validators/session.validators'
@@ -45,30 +46,36 @@ export async function createSessionController(
       return res.status(400).json({ error: evaluation.antiCheat.reason })
     }
 
-    const session = await prisma.typingSession.create({
-      data: {
-        userId,
-        snippetId,
-        // Forzar Float explícito — el pooler de Supabase es estricto con los tipos numéricos
-        wpm:          parseFloat(evaluation.wpm.toString()),
-        cpm:          parseFloat(evaluation.cpm.toString()),
-        precision:    parseFloat(evaluation.precision.toString()),
-        totalErrors,
-        difficultKeys: evaluation.difficultKeys,
-        status:       evaluation.status,
-      },
-    })
+    // Usamos $queryRaw para evitar el error 22P03 del pooler de Supabase
+    // con tipos Float — Prisma ORM tiene un bug conocido con PgBouncer Transaction mode
+    const sessionId = randomUUID()
+    await prisma.$executeRaw`
+      INSERT INTO "public"."TypingSession"
+        ("id", "userId", "snippetId", "wpm", "cpm", "precision", "totalErrors", "difficultKeys", "status", "archived", "date")
+      VALUES (
+        ${sessionId}::uuid,
+        ${userId}::uuid,
+        ${snippetId}::uuid,
+        ${evaluation.wpm}::float8,
+        ${evaluation.cpm}::float8,
+        ${evaluation.precision}::float8,
+        ${totalErrors}::int4,
+        ${evaluation.difficultKeys}::text[],
+        ${evaluation.status}::"public"."SessionStatus",
+        false,
+        NOW()
+      )
+    `
 
     return res.status(201).json({
       message: 'Session saved',
       data: {
-        id: session.id,
-        wpm: session.wpm,
-        cpm: session.cpm,
-        precision: session.precision,
-        status: session.status,
-        difficultKeys: session.difficultKeys,
-        date: session.date,
+        id: sessionId,
+        wpm: evaluation.wpm,
+        cpm: evaluation.cpm,
+        precision: evaluation.precision,
+        status: evaluation.status,
+        difficultKeys: evaluation.difficultKeys,
       },
     })
   } catch (error) {
