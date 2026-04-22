@@ -1,15 +1,15 @@
-import { Response } from 'express'
+import { Request, Response } from 'express'
 import prisma from '../lib/prisma'
 import { AuthenticatedRequest } from '../types'
 import { CreateSessionInput } from '../validators/session.validators'
 import { evaluateSession } from '../services/typing-engine.service'
 
 export async function createSessionController(
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response
 ) {
   try {
-    const userId = req.user.userId
+    const userId = (req as AuthenticatedRequest).user.userId
     const { snippetId, correctChars, totalErrors, durationMs, keyErrors } = req.body as CreateSessionInput
     const snippet = await prisma.snippet.findUnique({
       where: { id: snippetId },
@@ -58,9 +58,9 @@ export async function createSessionController(
   }
 }
 
-export async function getMineController(req: AuthenticatedRequest, res: Response) {
+export async function getMineController(req: Request, res: Response) {
   try {
-    const userId = req.user.userId
+    const userId = (req as AuthenticatedRequest).user.userId
     const page = Math.max(1, parseInt(req.query.page as string) || 1)
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 10))
     const language = req.query.language as string | undefined
