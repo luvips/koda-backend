@@ -40,11 +40,11 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 
 // ─── Rutas ───────────────────────────────────────────────────────────────────
 
-app.use('/health', healthRouter)
-app.use('/auth', authRouter)
-app.use('/snippets', snippetsRouter)
-app.use('/sessions', sessionsRouter)
-app.use('/progress', progressRouter)
+app.use('/api/v1/health', healthRouter)
+app.use('/api/v1/auth', authRouter)
+app.use('/api/v1/snippets', snippetsRouter)
+app.use('/api/v1/sessions', sessionsRouter)
+app.use('/api/v1/progress', progressRouter)
 
 // ─── Handler 404 ─────────────────────────────────────────────────────────────
 

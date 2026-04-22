@@ -29,10 +29,10 @@ describe('Auth API', () => {
     await prisma.$disconnect()
   })
 
-  describe('POST /auth/register', () => {
+  describe('POST /api/v1/auth/register', () => {
     it('debe registrar un usuario con datos válidos', async () => {
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/v1/auth/register')
         .send(testUser)
         .expect(201)
 
@@ -50,7 +50,7 @@ describe('Auth API', () => {
     it('debe rechazar email duplicado con 409', async () => {
       // Intentar registrar el mismo email otra vez
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/v1/auth/register')
         .send(testUser)
         .expect(409)
 
@@ -59,7 +59,7 @@ describe('Auth API', () => {
 
     it('debe rechazar password sin mayúscula con 400', async () => {
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           name: 'Test User',
           email: 'another@example.com',
@@ -76,7 +76,7 @@ describe('Auth API', () => {
 
     it('debe rechazar email inválido con 400', async () => {
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           name: 'Test User',
           email: 'not-an-email', // Email inválido
@@ -90,7 +90,7 @@ describe('Auth API', () => {
 
     it('debe rechazar password sin número con 400', async () => {
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           name: 'Test User',
           email: 'test@example.com',
@@ -104,10 +104,10 @@ describe('Auth API', () => {
     })
   })
 
-  describe('POST /auth/login', () => {
+  describe('POST /api/v1/auth/login', () => {
     it('debe autenticar con credenciales correctas', async () => {
       const response = await request(app)
-        .post('/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: testEmail,
           password: testUser.password,
@@ -125,7 +125,7 @@ describe('Auth API', () => {
 
     it('debe rechazar password incorrecta con 401', async () => {
       const response = await request(app)
-        .post('/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: testEmail,
           password: 'WrongPassword123!',
@@ -137,7 +137,7 @@ describe('Auth API', () => {
 
     it('debe rechazar email no registrado con 401', async () => {
       const response = await request(app)
-        .post('/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'noexiste@example.com',
           password: 'Test1234!',
@@ -150,7 +150,7 @@ describe('Auth API', () => {
 
     it('debe rechazar email con formato inválido', async () => {
       const response = await request(app)
-        .post('/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'not-an-email',
           password: 'Test1234!',
