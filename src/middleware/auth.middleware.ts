@@ -1,11 +1,11 @@
-import { Response, NextFunction } from 'express'
+import { Request, Response, NextFunction } from 'express'
 import { verifyToken } from '../lib/jwt'
 import { AuthenticatedRequest } from '../types'
 
 // Middleware para proteger rutas que requieren autenticación
 // Verifica que el usuario tenga un JWT válido en el header Authorization
 export function authenticate(
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
@@ -37,7 +37,8 @@ export function authenticate(
 
   // Token válido: adjuntamos el payload al request para que los controllers
   // puedan acceder a la información del usuario autenticado (userId, email)
-  req.user = payload
+  // Casteamos a AuthenticatedRequest para poder asignar req.user
+  ;(req as AuthenticatedRequest).user = payload
 
   next()
 }

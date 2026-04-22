@@ -7,12 +7,42 @@ import prisma from './lib/prisma'
 
 const PORT = process.env.PORT ?? 4000
 
+// ─── RN-07: Archivado automático de sesiones antiguas ────────────────────────
+
+// Marca como archived=true las sesiones con más de 24 meses de antigüedad.
+// Se ejecuta una sola vez al arrancar el servidor.
+// NO elimina registros — solo los marca para excluirlos de las queries activas.
+async function archiveOldSessions(): Promise<void> {
+  const cutoffDate = new Date()
+  cutoffDate.setMonth(cutoffDate.getMonth() - 24) // hace 24 meses
+
+  const result = await prisma.typingSession.updateMany({
+    where: {
+      date: { lt: cutoffDate },
+      archived: false,
+    },
+    data: { archived: true },
+  })
+
+  if (result.count > 0) {
+    console.log(`${result.count} sesiones archivadas (RN-07)`)
+  }
+}
+
 // Conectamos la base de datos primero y solo entonces iniciamos el servidor HTTP.
 // Si la BD no está disponible, el servidor arranca en modo degradado (health check responderá "degraded")
 prisma
   .$connect()
-  .then(() => {
+  .then(async () => {
     console.log('Base de datos conectada')
+
+    // Ejecutar archivado automático después de conectar la BD
+    // Los errores no deben impedir que el servidor arranque
+    try {
+      await archiveOldSessions()
+    } catch (err) {
+      console.warn('Advertencia: no se pudo ejecutar el archivado automático:', err)
+    }
   })
   .catch((err: Error) => {
     console.warn('Advertencia: BD no disponible, servidor en modo degradado:', err.message)

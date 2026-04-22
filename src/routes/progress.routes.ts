@@ -1,11 +1,12 @@
 import { Router } from 'express'
-
-// TODO: Prompt 6 — Implementar rutas de progreso del usuario
-// Rutas previstas:
-//   GET /progress/stats      → estadísticas generales (WPM promedio, precisión, etc.)
-//   GET /progress/heatmap    → teclas con más errores para el heatmap
-//   GET /progress/history    → historial de WPM a lo largo del tiempo
+import { getSummaryController } from '../controllers/progress.controller'
+import { authenticate } from '../middleware/auth.middleware'
 
 const router = Router()
+
+// GET /progress/summary
+// Retorna estadísticas y historial del usuario autenticado
+// Requiere JWT válido en el header Authorization: Bearer <token>
+router.get('/summary', authenticate, getSummaryController)
 
 export default router
