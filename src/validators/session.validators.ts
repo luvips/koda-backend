@@ -1,4 +1,7 @@
 import { z } from 'zod'
+
+// El backend calcula wpm, cpm y precision internamente a partir de estos campos.
+// Usamos .passthrough() para ignorar campos extra que el frontend pueda enviar.
 export const createSessionSchema = z.object({
   snippetId: z.string().uuid('snippetId debe ser un UUID válido'),
   correctChars: z
@@ -17,5 +20,6 @@ export const createSessionSchema = z.object({
     .array(z.string().max(5))
     .max(500,'keyErrors no puede tener más de 500 entradas')
     .default([]),
-})
+}).passthrough()
+
 export type CreateSessionInput = z.infer<typeof createSessionSchema>
