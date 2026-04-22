@@ -1,0 +1,83 @@
+// Prisma schema para AWOS - typing speed trainer
+// Proveedor: PostgreSQL en Supabase
+// IMPORTANTE: Las tablas ya existen en la BD, NO usar prisma migrate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+// Usuario del sistema — almacena credenciales y relación con sesiones
+model User {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String          @db.VarChar(100)
+  email     String          @unique @db.VarChar(100)
+  password  String          @db.VarChar(255)
+  createdAt DateTime        @default(now())
+  sessions  TypingSession[]
+}
+
+// Lenguajes de programación disponibles
+model Language {
+  id       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String    @unique @db.VarChar(100)
+  slug     String    @unique @db.VarChar(100)
+  icon     String?   @db.VarChar(100)
+  snippets Snippet[]
+}
+
+// Fragmentos de código para practicar tipeo
+model Snippet {
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  languageId         String          @db.Uuid
+  code               String
+  difficulty         Difficulty
+  specialCharacters  Boolean         @default(false)
+  tags               String[]
+  source             String          @default("seed")
+  sourceUrl          String?
+  isActive           Boolean         @default(true)
+  createdAt          DateTime        @default(now())
+  language           Language        @relation(fields: [languageId], references: [id])
+  sessions           TypingSession[]
+}
+
+// Sesiones de tipeo completadas por los usuarios
+model TypingSession {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String        @db.Uuid
+  snippetId     String        @db.Uuid
+  wpm           Float
+  cpm           Float
+  precision     Float
+  totalErrors   Int
+  difficultKeys String[]
+  status        SessionStatus
+  archived      Boolean       @default(false)
+  date          DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snippet       Snippet       @relation(fields: [snippetId], references: [id])
+
+  @@index([userId, date])
+  @@index([snippetId])
+  @@index([userId, status])
+}
+
+// Niveles de dificultad de los snippets
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+// Estados posibles de una sesión de tipeo
+enum SessionStatus {
+  COMPLETED
+  INVALID
+  INCOMPLETE
+}
