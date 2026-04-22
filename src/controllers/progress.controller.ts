@@ -66,8 +66,8 @@ export async function getSummaryController(req: Request, res: Response) {
         },
       }),
 
-      // Query 5 — Todas las sesiones COMPLETED con su snippet y lenguaje
-      // Se usa para calcular el lenguaje favorito por frecuencia
+      // Query 5 — Todas las sesiones COMPLETED con su snippet, lenguaje y teclas difíciles
+      // Se usa para calcular el lenguaje favorito y acumular teclas difíciles
       prisma.typingSession.findMany({
         where: {
           userId,
@@ -75,6 +75,7 @@ export async function getSummaryController(req: Request, res: Response) {
           archived: false,
         },
         select: {
+          difficultKeys: true,
           snippet: {
             select: {
               language: {
@@ -114,15 +115,12 @@ export async function getSummaryController(req: Request, res: Response) {
     const bestWpm = bestSession ? Math.round(bestSession.wpm) : 0
 
     // ── Lenguaje favorito ─────────────────────────────────────────────────────
-    // Contamos cuántas sesiones tiene cada slug de lenguaje
     const languageCounts: Record<string, number> = {}
     for (const session of allCompletedWithLanguage) {
       const slug = session.snippet.language.slug
       languageCounts[slug] = (languageCounts[slug] ?? 0) + 1
     }
 
-    // El lenguaje favorito es el que tiene más sesiones
-    // Si no hay sesiones, retornamos null
     let favoriteLanguage: string | null = null
     let maxCount = 0
     for (const [slug, count] of Object.entries(languageCounts)) {
@@ -131,6 +129,21 @@ export async function getSummaryController(req: Request, res: Response) {
         favoriteLanguage = slug
       }
     }
+
+    // ── Teclas difíciles acumuladas de todas las sesiones ─────────────────────
+    // Contamos la frecuencia de cada tecla en todas las sesiones del usuario
+    // y retornamos las top 10 ordenadas por frecuencia descendente
+    const keyFrequency: Record<string, number> = {}
+    for (const session of allCompletedWithLanguage) {
+      for (const key of (session as any).difficultKeys ?? []) {
+        keyFrequency[key] = (keyFrequency[key] ?? 0) + 1
+      }
+    }
+
+    const difficultKeys = Object.entries(keyFrequency)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([key]) => key)
 
     // ── Historial de los últimos 30 días agrupado por fecha ───────────────────
     // Agrupamos las sesiones por fecha (YYYY-MM-DD) y calculamos el WPM promedio
@@ -166,6 +179,7 @@ export async function getSummaryController(req: Request, res: Response) {
         totalSessions,
         completedSessions,
         favoriteLanguage,
+        difficultKeys,
         recentHistory,
       },
     })
