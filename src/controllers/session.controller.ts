@@ -41,6 +41,8 @@ export async function createSessionController(
     })
 
     console.log('[createSessionController] evaluation:', evaluation)
+    console.log('[createSessionController] keyErrors recibidos:', keyErrors)
+    console.log('[createSessionController] difficultKeys calculadas:', evaluation.difficultKeys)
 
     if (!evaluation.antiCheat.valid) {
       return res.status(400).json({ error: evaluation.antiCheat.reason })

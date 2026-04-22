@@ -52,7 +52,7 @@ export function extractDifficultKeys(keyErrors: string[]): string[] {
   }
 
   return Object.entries(frequency)
-    .filter(([, count]) => count > 2)
+    .filter(([, count]) => count >= 1)  // Guardar cualquier tecla con al menos 1 error
     .sort(([, a], [, b]) => b - a)
     .map(([key]) => key)
 }
