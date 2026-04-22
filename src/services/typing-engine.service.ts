@@ -14,19 +14,19 @@ export interface EvaluatedSession {
 }
 
 export function calculateWPM(correctChars: number, durationMs: number): number {
-  if (durationMs <= 0 || correctChars <= 0) return 0
-  return Math.round((correctChars / 5) / (durationMs / 60000))
+  if (durationMs <= 0 || correctChars <= 0) return 0.0
+  return parseFloat(((correctChars / 5) / (durationMs / 60000)).toFixed(2))
 }
 
 export function calculateCPM(correctChars: number, durationMs: number): number {
-  if (durationMs <= 0) return 0
-  return Math.round(correctChars / (durationMs / 60000))
+  if (durationMs <= 0) return 0.0
+  return parseFloat((correctChars / (durationMs / 60000)).toFixed(2))
 }
 
 export function calculatePrecision(correctChars: number, totalErrors: number): number {
   const total = correctChars + totalErrors
-  if (total === 0) return 0
-  return Number(((correctChars / total) * 100).toFixed(2))
+  if (total === 0) return 0.0
+  return parseFloat(((correctChars / total) * 100).toFixed(2))
 }
 
 export function determineSessionStatus(precision: number): SessionStatus {

@@ -49,12 +49,13 @@ export async function createSessionController(
       data: {
         userId,
         snippetId,
-        wpm: evaluation.wpm,
-        cpm: evaluation.cpm,
-        precision: evaluation.precision,
+        // Forzar Float explícito — el pooler de Supabase es estricto con los tipos numéricos
+        wpm:          parseFloat(evaluation.wpm.toString()),
+        cpm:          parseFloat(evaluation.cpm.toString()),
+        precision:    parseFloat(evaluation.precision.toString()),
         totalErrors,
         difficultKeys: evaluation.difficultKeys,
-        status: evaluation.status,
+        status:       evaluation.status,
       },
     })
 
