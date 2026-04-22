@@ -1,0 +1,2 @@
+// TODO: Prompts 3-6 — Controladores de cada recurso (auth, snippets, sessions, progress)
+// Los controladores reciben el Request/Response de Express y delegan la lógica a los servicios

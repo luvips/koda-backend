@@ -1,0 +1,2 @@
+// TODO: Prompt 3 — Middlewares de autenticación y autorización
+// Previsto: authenticate.ts (verifica JWT), authorize.ts (verifica roles)
